@@ -1,0 +1,101 @@
+const SHEET_NAME = "Respuestas";
+
+function getSheet() {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+}
+
+function doGet(e) {
+
+  const unidad = (e.parameter.unidad || "").toUpperCase();
+  const sheet = getSheet();
+
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+
+    if ((data[i][0] || "").toString().toUpperCase() === unidad) {
+
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          encontrado: true,
+          unidad: data[i][0],
+          pos1: data[i][1],
+          pos2: data[i][2],
+          pos3: data[i][3],
+          pos4: data[i][4],
+          pos5: data[i][5],
+          pos6: data[i][6],
+          turno: data[i][7],
+          lugar: data[i][8],
+          descripcion: data[i][9],
+          rdt1: data[i][10],
+          rdt2: data[i][11],
+          mecanico: data[i][12],
+          fecha: data[i][13],
+          estatus: data[i][14],
+          motivo: data[i][15]
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      encontrado: false
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+
+  const sheet = getSheet();
+
+  const d = JSON.parse(e.postData.contents);
+
+  const rows = sheet.getDataRange().getValues();
+
+  let fila = -1;
+
+  for (let i = 1; i < rows.length; i++) {
+
+    if ((rows[i][0] || "").toString().toUpperCase() === d.unidad.toUpperCase()) {
+      fila = i + 1;
+      break;
+    }
+  }
+
+  const registro = [[
+    d.unidad,
+    d.pos1,
+    d.pos2,
+    d.pos3,
+    d.pos4,
+    d.pos5,
+    d.pos6,
+    d.turno,
+    d.lugar,
+    d.descripcion,
+    d.rdt1,
+    d.rdt2,
+    d.mecanico,
+    d.fecha,
+    d.estatus,
+    d.motivo
+  ]];
+
+  if (fila > 0) {
+
+    sheet.getRange(fila, 1, 1, 16).setValues(registro);
+
+  } else {
+
+    sheet.appendRow(registro[0]);
+
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      success: true
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
